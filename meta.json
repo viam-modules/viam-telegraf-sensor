@@ -6,7 +6,9 @@
   "models": [
     {
       "api": "rdk:component:sensor",
-      "model": "viam:viam-sensor:telegrafsensor"
+      "model": "viam:viam-sensor:telegrafsensor",
+      "markdown_link" : "README.md#configure-your-telegraf-sensor",
+      "short_description": "a sensor to capture metrics of your machine using Telegraf"
     }
   ],
   "build": {

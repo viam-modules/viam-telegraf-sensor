@@ -3,6 +3,18 @@
 A Viam `sensor` implementation in Go that reads the output from [Telegraf](https://github.com/influxdata/telegraf).
 Currently, this sensor executes telegraf as a client and collect the metrics enabled on [viam-telegraf.conf](viam-telegraf.conf). 
 
+> [!NOTE]
+> Before configuring your `telegraf-sensor`, you must [create a machine](https://docs.viam.com/manage/fleet/machines/#add-a-new-machine).
+
+Navigate to the **Config** tab of your machine's page in [the Viam app](https://app.viam.com/).
+Click on the **Components** subtab and click **Create component**.
+Select the `sensor` type, then select the `viam:viam-sensor:telegrafsensor` model.
+Click **Add module**, then enter a name for your sensor and click **Create**.
+
+
+> [!NOTE]
+> For more information, see [Configure a Machine](https://docs.viam.com/configure/).
+
 ## Build and run
 
 To use this module, follow the instructions to [add a module from the Viam Registry](https://docs.viam.com/registry/configure/#add-a-modular-resource-from-the-viam-registry) and select the `viam:viam-sensor:telegrafsensor` model from the [`viam-telegraf-sensor` module](https://app.viam.com/module/viam/viam-telegraf-sensor).
@@ -15,16 +27,7 @@ This sensor will attempt to automatically setup Telegraf on your device using `a
 * Jetson Orin Nano running Ubuntu Focal
 
 ## Configure your `telegraf-sensor`
-
-> [!NOTE]
-> Before configuring your `telegraf-sensor`, you must [create a machine](https://docs.viam.com/manage/fleet/machines/#add-a-new-machine).
-
-Navigate to the **Config** tab of your machine's page in [the Viam app](https://app.viam.com/).
-Click on the **Components** subtab and click **Create component**.
-Select the `sensor` type, then select the `viam:viam-sensor:telegrafsensor` model.
-Click **Add module**, then enter a name for your sensor and click **Create**.
-
-On the new component panel, copy and paste the following attribute template into your sensor’s **Attributes** box:
+On the new component panel, copy and paste the following attribute template into your JSON configuration:
 
 ```json
 {
@@ -45,8 +48,6 @@ On the new component panel, copy and paste the following attribute template into
 
 Addjust your configuration and save your config.
 
-> [!NOTE]
-> For more information, see [Configure a Machine](https://docs.viam.com/configure/).
 
 
 ### Attributes
