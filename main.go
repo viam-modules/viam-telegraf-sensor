@@ -15,7 +15,7 @@ func main() {
 }
 
 func mainWithArgs(ctx context.Context, args []string, logger logging.Logger) error {
-	sensorModule, err := module.NewModuleFromArgs(ctx, logger)
+	sensorModule, err := module.NewModuleFromArgs(ctx)
 	if err != nil {
 		return err
 	}
