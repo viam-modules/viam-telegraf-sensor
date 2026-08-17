@@ -26,8 +26,7 @@ func newTelegrafConf(conf resource.Config, logger logging.Logger) error {
 		return fmt.Errorf("error reading base.conf: %v", err)
 	}
 
-	err = os.WriteFile(telegrafConfPath, baseConfigData, 0644)
-	if err != nil {
+	if err := os.WriteFile(telegrafConfPath, baseConfigData, 0o600); err != nil {
 		return fmt.Errorf("error writing config file: %v", err)
 	}
 
@@ -55,7 +54,7 @@ func newTelegrafConf(conf resource.Config, logger logging.Logger) error {
 			continue
 		}
 
-		destFile, err := os.OpenFile(telegrafConfPath, os.O_APPEND|os.O_WRONLY, 0644)
+		destFile, err := os.OpenFile(telegrafConfPath, os.O_APPEND|os.O_WRONLY, 0o600)
 		if err != nil {
 			logger.Errorf("Error opening file %s: %v", telegrafConfPath, err)
 			continue
@@ -64,10 +63,11 @@ func newTelegrafConf(conf resource.Config, logger logging.Logger) error {
 		if _, err := destFile.Write(templateData); err != nil {
 			logger.Errorf("Error writing config file %s: %v", telegrafConfPath, err)
 		}
-		destFile.Close()
+		if err := destFile.Close(); err != nil {
+			logger.Errorf("Error closing config file %s: %v", telegrafConfPath, err)
+		}
 		emptyInputs = false
 		logger.Debugf("Added config section for %s metric", confName)
-
 	}
 
 	if emptyInputs {
@@ -77,9 +77,11 @@ func newTelegrafConf(conf resource.Config, logger logging.Logger) error {
 	return nil
 }
 
+// Config is the module configuration schema. Each Disable* field maps to a
+// Telegraf input plugin that can be turned off via the machine config.
 type Config struct {
 	resource.TriviallyValidateConfig
-	DisableCpu       bool `json:"disable_cpu"`
+	DisableCPU       bool `json:"disable_cpu"`
 	DisableDisk      bool `json:"disable_disk"`
 	DisableDiskIo    bool `json:"disable_disk_io"`
 	DisableKernel    bool `json:"disable_kernel"`
