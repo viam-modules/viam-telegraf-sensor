@@ -105,6 +105,16 @@ func toMap(metricsMap map[string][]Metric, logger logging.Logger) map[string]int
 			continue
 		}
 
+		if keyTag, ok := keyableByTag[name]; ok {
+			obj := map[string]interface{}{}
+			for _, m := range metrics {
+				key := strings.ReplaceAll(fmt.Sprint(m.Tags[keyTag]), " ", "_")
+				obj[key] = metricToMap(m)
+			}
+			results[name] = obj
+			continue
+		}
+
 		metricsArray := []interface{}{}
 		for _, metric := range metrics {
 			metricsArray = append(metricsArray, metricToMap(metric))
@@ -135,6 +145,13 @@ var metricsExtraFields = map[string][]string{
 	"diskio":   {"name"},
 	"wireless": {"interface"},
 	"net":      {"interface"},
+}
+
+var keyableByTag = map[string]string{
+	"temp":   "sensor",
+	"net":    "interface",
+	"disk":   "device",
+	"diskio": "name",
 }
 
 // A given Telegraf metric may come in multiple json readings. If tags are the same, merge fields
