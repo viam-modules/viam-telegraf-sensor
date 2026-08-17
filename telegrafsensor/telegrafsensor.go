@@ -77,7 +77,7 @@ func (ts *TelegrafSensor) Readings(ctx context.Context, _ map[string]interface{}
 		var metric Metric
 		err := json.Unmarshal([]byte(mline), &metric)
 		if err != nil {
-			ts.logger.Errorw("Error parsing reading", "input", mline, "error", mline)
+			ts.logger.Errorw("Error parsing reading", "input", mline, "error", err)
 		}
 
 		metrics[metric.Name] = append(metrics[metric.Name], metric)
