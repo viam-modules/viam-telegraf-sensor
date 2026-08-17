@@ -87,7 +87,11 @@ func (ts *TelegrafSensor) Readings(_ context.Context, _ map[string]interface{}) 
 		metrics[metric.Name] = append(metrics[metric.Name], metric)
 	}
 
-	return toMap(metrics, ts.logger), nil
+	result := toMap(metrics, ts.logger)
+	if throttle := readPackageThrottleStats(); throttle != nil {
+		result["throttle"] = throttle
+	}
+	return result, nil
 }
 
 func toMap(metricsMap map[string][]Metric, logger logging.Logger) map[string]interface{} {
