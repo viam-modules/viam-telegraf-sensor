@@ -1,3 +1,4 @@
+// Package telegrafsensor wraps the Telegraf agent as a Viam sensor component.
 package telegrafsensor
 
 import (
@@ -5,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os/exec"
 	"reflect"
 	"strings"
@@ -14,9 +16,8 @@ import (
 	"go.viam.com/rdk/resource"
 )
 
-var (
-	Model = resource.NewModel("viam", "viam-sensor", "telegrafsensor")
-)
+// Model is the resource model identifier for the Telegraf sensor.
+var Model = resource.NewModel("viam", "viam-sensor", "telegrafsensor")
 
 func init() {
 	resource.RegisterComponent(
@@ -28,8 +29,8 @@ func init() {
 }
 
 func newSensor(
-	ctx context.Context,
-	deps resource.Dependencies,
+	_ context.Context,
+	_ resource.Dependencies,
 	conf resource.Config,
 	logger logging.Logger,
 ) (sensor.Sensor, error) {
@@ -38,14 +39,14 @@ func newSensor(
 		logger: logger,
 	}
 
-	err := newTelegrafConf(conf, logger)
-
-	if err != nil {
+	if err := newTelegrafConf(conf, logger); err != nil {
 		return nil, err
 	}
 	return &ts, nil
 }
 
+// TelegrafSensor is the Viam sensor implementation that shells out to the
+// Telegraf agent and returns its most recent readings.
 type TelegrafSensor struct {
 	resource.Named
 	resource.AlwaysRebuild
@@ -53,6 +54,8 @@ type TelegrafSensor struct {
 	logger logging.Logger
 }
 
+// Metric mirrors a single Telegraf JSON-format output record: a named measurement
+// with a set of fields, a set of tags, and a timestamp.
 type Metric struct {
 	Name      string                 `json:"name"`
 	Fields    map[string]interface{} `json:"fields"`
@@ -60,7 +63,9 @@ type Metric struct {
 	Timestamp uint64                 `json:"timestamp"`
 }
 
-func (ts *TelegrafSensor) Readings(ctx context.Context, _ map[string]interface{}) (map[string]interface{}, error) {
+// Readings runs Telegraf once and returns the metrics it emits, grouped by
+// measurement name and shaped into a Viam-friendly map.
+func (ts *TelegrafSensor) Readings(_ context.Context, _ map[string]interface{}) (map[string]interface{}, error) {
 	metrics := map[string][]Metric{}
 
 	telegrafOut, err := getTelegrafMetrics()
@@ -75,9 +80,8 @@ func (ts *TelegrafSensor) Readings(ctx context.Context, _ map[string]interface{}
 		}
 
 		var metric Metric
-		err := json.Unmarshal([]byte(mline), &metric)
-		if err != nil {
-			ts.logger.Errorw("Error parsing reading", "input", mline, "error", mline)
+		if err := json.Unmarshal([]byte(mline), &metric); err != nil {
+			ts.logger.Errorw("Error parsing reading", "input", mline, "error", err)
 		}
 
 		metrics[metric.Name] = append(metrics[metric.Name], metric)
@@ -92,8 +96,7 @@ func toMap(metricsMap map[string][]Metric, logger logging.Logger) map[string]int
 	metricsMap = mergeMetrics(metricsMap, logger)
 
 	for name, metrics := range metricsMap {
-		_, ok := results["host"]
-		if !ok {
+		if _, ok := results["host"]; !ok {
 			results["host"] = metrics[0].Tags["host"]
 		}
 
@@ -103,11 +106,9 @@ func toMap(metricsMap map[string][]Metric, logger logging.Logger) map[string]int
 		}
 
 		metricsArray := []interface{}{}
-
 		for _, metric := range metrics {
 			metricsArray = append(metricsArray, metricToMap(metric))
 		}
-
 		results[name] = metricsArray
 	}
 
@@ -177,14 +178,14 @@ func appendFields(m Metric, newFields map[string]interface{}) (map[string]interf
 }
 
 func getTelegrafMetrics() (string, error) {
-	// telegraf must be configure to output in json format
+	// telegraf must be configured to output in json format
 	cmd := exec.Command("telegraf", "--config", telegrafConfPath, "--once")
-	var out bytes.Buffer
+	var out, stderr bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 
-	err := cmd.Run()
-	if err != nil {
-		return "", err
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("telegraf failed: %w — stderr: %s", err, stderr.String())
 	}
 
 	return out.String(), nil
