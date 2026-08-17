@@ -92,6 +92,9 @@ func (ts *TelegrafSensor) Readings(_ context.Context, _ map[string]interface{}) 
 	if throttle := readPackageThrottleStats(); throttle != nil {
 		result["throttle"] = throttle
 	}
+	if freqs := readCPUFreqs(); freqs != nil {
+		result["cpu_freq"] = freqs
+	}
 	return result, nil
 }
 
