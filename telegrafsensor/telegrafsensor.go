@@ -140,18 +140,20 @@ func metricToMap(m Metric) map[string]interface{} {
 }
 
 var metricsExtraFields = map[string][]string{
-	"disk":     {"device", "fstype", "path"},
-	"temp":     {"sensor"},
-	"diskio":   {"name"},
-	"wireless": {"interface"},
-	"net":      {"interface"},
+	"disk":      {"device", "fstype", "path"},
+	"temp":      {"sensor"},
+	"diskio":    {"name"},
+	"wireless":  {"interface"},
+	"net":       {"interface"},
+	"linux_cpu": {"cpu"},
 }
 
 var keyableByTag = map[string]string{
-	"temp":   "sensor",
-	"net":    "interface",
-	"disk":   "device",
-	"diskio": "name",
+	"temp":      "sensor",
+	"net":       "interface",
+	"disk":      "device",
+	"diskio":    "name",
+	"linux_cpu": "cpu",
 }
 
 // A given Telegraf metric may come in multiple json readings. If tags are the same, merge fields

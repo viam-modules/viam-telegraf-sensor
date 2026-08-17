@@ -34,8 +34,8 @@ func newTelegrafConf(conf resource.Config, logger logging.Logger) error {
 
 	for confName, disableField := range metricMap {
 		switch disableField {
-		// Wireless and Temp disabled by default as not all systems have the necessary hardware.
-		case "disable_temp", "disable_wireless":
+		// Disabled by default because they need hardware/OS support that isn't universal.
+		case "disable_temp", "disable_wireless", "disable_linux_cpu":
 			if conf.Attributes.Bool(disableField, true) {
 				logger.Debugf("Skipping config section for %s metric", confName)
 				continue
@@ -93,6 +93,7 @@ type Config struct {
 	DisableSystem    bool `json:"disable_system"`
 	DisableTemp      bool `json:"disable_temp,omitempty"`
 	DisableWireless  bool `json:"disable_wireless,omitempty"`
+	DisableLinuxCPU  bool `json:"disable_linux_cpu,omitempty"`
 }
 
 var metricMap = map[string]string{
@@ -108,4 +109,5 @@ var metricMap = map[string]string{
 	"system":    "disable_system",
 	"temp":      "disable_temp",
 	"wireless":  "disable_wireless",
+	"linux_cpu": "disable_linux_cpu",
 }
