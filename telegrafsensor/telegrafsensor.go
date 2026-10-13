@@ -35,8 +35,9 @@ func newSensor(
 	logger logging.Logger,
 ) (sensor.Sensor, error) {
 	ts := TelegrafSensor{
-		Named:  conf.ResourceName().AsNamed(),
-		logger: logger,
+		Named:      conf.ResourceName().AsNamed(),
+		logger:     logger,
+		netSampler: newNetSampler(),
 	}
 
 	if err := newTelegrafConf(conf, logger); err != nil {
@@ -51,7 +52,8 @@ type TelegrafSensor struct {
 	resource.Named
 	resource.AlwaysRebuild
 	resource.TriviallyCloseable
-	logger logging.Logger
+	logger     logging.Logger
+	netSampler *netSampler
 }
 
 // Metric mirrors a single Telegraf JSON-format output record: a named measurement
@@ -95,6 +97,7 @@ func (ts *TelegrafSensor) Readings(_ context.Context, _ map[string]interface{}) 
 	if freqs := readCPUFreqs(); freqs != nil {
 		result["cpu_freq"] = freqs
 	}
+	annotateNetUtil(result, ts.netSampler)
 	return result, nil
 }
 
